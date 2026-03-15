@@ -1,16 +1,7 @@
 const STORAGE_KEY = 'any-planner-web-faithful-v1.7';
 const $ = (s)=>document.querySelector(s);
-const BUILTIN_TEMPLATES = [
-  { id:'b1', title:'依頼者へメール返信', category:'work' },
-  { id:'b2', title:'資料作成', category:'work' },
-  { id:'b3', title:'明日の準備', category:'work' },
-  { id:'b4', title:'洗濯', category:'home' },
-  { id:'b5', title:'買い物', category:'home' },
-  { id:'b6', title:'ゴミ出し', category:'home' },
-  { id:'b7', title:'散歩', category:'personal' },
-  { id:'b8', title:'読書', category:'personal' },
-  { id:'b9', title:'運動', category:'personal' },
-];
+const BUILTIN_TEMPLATES = [];
+const DEMO_TITLES = new Set(['弁当','依頼者へメール返信','17日資料作成','資料作成','明日の準備']);
 const FILTERS = [
   { key:'all', label:'全部' },
   { key:'work', label:'仕事' },
@@ -51,6 +42,7 @@ function load(){
     if(raw.settings) Object.assign(state.settings, raw.settings);
     if(Array.isArray(raw.customTemplates)) state.customTemplates = raw.customTemplates.map(t=>({ id:t.id||uid(), title:normalizeTitle(t.title), category:t.category||'personal' })).filter(t=>t.title);
     if(Array.isArray(raw.recentTitles)) state.recentTitles = uniqueTitles(raw.recentTitles).slice(0, 12);
+    migrateDemoData(raw);
   }catch{}
   seed();
 }
@@ -59,24 +51,41 @@ function save(){
     tasks: state.tasks,
     settings: state.settings,
     customTemplates: state.customTemplates,
-    recentTitles: state.recentTitles
+    recentTitles: state.recentTitles,
+    migrationNoDemoSeed: true
   }));
 }
 function seed(){
-  if(state.tasks.length) return;
-  state.tasks=[
-    {id:uid(), title:'弁当', note:'次にやること', date:state.selected, time:'12:30', done:false, later:false},
-    {id:uid(), title:'依頼者へメール返信', note:'15分', later:true, done:false},
-    {id:uid(), title:'17日資料作成', note:'', later:true, done:false}
-  ];
-  if(!state.customTemplates.length){
-    state.customTemplates = [
-      { id:uid(), title:'日報を書く', category:'work' },
-      { id:uid(), title:'洗い物', category:'home' }
-    ];
-  }
-  state.recentTitles = uniqueTitles(state.tasks.map(t=>t.title)).slice(0, 12);
+  if(state.tasks.length || state.customTemplates.length || state.recentTitles.length) return;
   save();
+}
+
+function migrateDemoData(raw){
+  if(raw?.migrationNoDemoSeed === true) return;
+  const before = JSON.stringify({ tasks:state.tasks, customTemplates:state.customTemplates, recentTitles:state.recentTitles });
+  state.tasks = state.tasks.filter(task=>!isDemoSeedTask(task));
+  state.customTemplates = state.customTemplates.filter(template=>!DEMO_TITLES.has(normalizeTitle(template.title)));
+  state.recentTitles = state.recentTitles.filter(title=>!DEMO_TITLES.has(normalizeTitle(title)));
+  const after = JSON.stringify({ tasks:state.tasks, customTemplates:state.customTemplates, recentTitles:state.recentTitles });
+  if(before !== after){
+    save();
+  } else {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      tasks: state.tasks,
+      settings: state.settings,
+      customTemplates: state.customTemplates,
+      recentTitles: state.recentTitles,
+      migrationNoDemoSeed: true
+    }));
+  }
+}
+function isDemoSeedTask(task){
+  const title = normalizeTitle(task?.title);
+  if(!DEMO_TITLES.has(title)) return false;
+  if(title === '弁当') return normalizeTitle(task?.note) === '次にやること';
+  if(title === '依頼者へメール返信') return normalizeTitle(task?.note) === '15分';
+  if(title === '17日資料作成') return !normalizeTitle(task?.note);
+  return true;
 }
 
 function recordRecentTitle(title){
@@ -316,8 +325,8 @@ function wire(){
   $('#removeImage').onclick=()=>{ state.pendingImage=''; $('#taskImage').value=''; syncImagePreview(); };
   $('#saveTask').onclick=saveTask;
   $('#saveTemplate').onclick=saveCurrentAsTemplate;
-  $('#quickAdd').onclick=()=>openEditor();
   $('#floatingAdd').onclick=()=>openEditor();
+  const railQuickAdd = $('#railQuickAdd'); if(railQuickAdd) railQuickAdd.onclick=()=>openEditor();
   $('#addLater').onclick=()=>{ openEditor(); $('#taskLater').checked=true; $('#editorState').textContent='あとで'; };
   document.querySelectorAll('.soft-pill').forEach(b=>b.onclick=()=>$('#taskTime').value=b.dataset.time);
   $('#taskLater').onchange=(e)=>$('#editorState').textContent=e.target.checked?'あとで':'予定';
