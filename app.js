@@ -1,16 +1,8 @@
 const STORAGE_KEY = 'any-planner-web-faithful-v1.7';
+const APP_VERSION = 'v1.8.2';
 const $ = (s)=>document.querySelector(s);
-const BUILTIN_TEMPLATES = [
-  { id:'b1', title:'依頼者へメール返信', category:'work' },
-  { id:'b2', title:'資料作成', category:'work' },
-  { id:'b3', title:'明日の準備', category:'work' },
-  { id:'b4', title:'洗濯', category:'home' },
-  { id:'b5', title:'買い物', category:'home' },
-  { id:'b6', title:'ゴミ出し', category:'home' },
-  { id:'b7', title:'散歩', category:'personal' },
-  { id:'b8', title:'読書', category:'personal' },
-  { id:'b9', title:'運動', category:'personal' },
-];
+const BUILTIN_TEMPLATES = [];
+const DEMO_TITLES = new Set(['弁当','依頼者へメール返信','17日資料作成','資料作成','明日の準備']);
 const FILTERS = [
   { key:'all', label:'全部' },
   { key:'work', label:'仕事' },
@@ -43,6 +35,42 @@ function jpMonthYear(d){ return `${d.getFullYear()}年${d.getMonth()+1}月`; }
 function normalizeTitle(v){ return String(v||'').trim().replace(/\s+/g,' '); }
 function uniqueTitles(list){ return [...new Set(list.map(normalizeTitle).filter(Boolean))]; }
 function shortCaption(v){ const d=parseISO(v); return `${d.getMonth()+1}月${d.getDate()}日(${['日','月','火','水','木','金','土'][d.getDay()]})`; }
+function normalizeTimeValue(v, fallback){
+  const base = String(v || fallback || '00:00');
+  const m = base.match(/^(\d{1,2}):(\d{2})$/);
+  if(!m) return fallback || '00:00';
+  const hh = Math.min(23, Math.max(0, Number(m[1])));
+  const mm = Math.min(59, Math.max(0, Number(m[2])));
+  return `${hh}:${String(mm).padStart(2,'0')}`;
+}
+function railCaption(v){
+  const t = normalizeTimeValue(v, '00:00').split(':');
+  return `${Number(t[0])}:${t[1]}`;
+}
+function toMinutes(v){
+  const t = normalizeTimeValue(v, '00:00').split(':').map(Number);
+  return t[0]*60 + t[1];
+}
+function fromMinutes(total){
+  const clamped = Math.min(23*60+59, Math.max(0, total));
+  const h = Math.floor(clamped/60);
+  const m = clamped%60;
+  return `${h}:${String(m).padStart(2,'0')}`;
+}
+function buildRailTimes(wake, sleep){
+  const start = toMinutes(wake);
+  let end = toMinutes(sleep);
+  if(end <= start) end = Math.min(start + 16*60, 23*60+59);
+  const result = [fromMinutes(start)];
+  let tick = Math.ceil((start + 1) / 60) * 60;
+  while(tick < end){
+    result.push(fromMinutes(tick));
+    tick += 60;
+  }
+  const endLabel = fromMinutes(end);
+  if(result[result.length-1] !== endLabel) result.push(endLabel);
+  return result;
+}
 
 function load(){
   try{
@@ -51,6 +79,7 @@ function load(){
     if(raw.settings) Object.assign(state.settings, raw.settings);
     if(Array.isArray(raw.customTemplates)) state.customTemplates = raw.customTemplates.map(t=>({ id:t.id||uid(), title:normalizeTitle(t.title), category:t.category||'personal' })).filter(t=>t.title);
     if(Array.isArray(raw.recentTitles)) state.recentTitles = uniqueTitles(raw.recentTitles).slice(0, 12);
+    migrateDemoData(raw);
   }catch{}
   seed();
 }
@@ -59,24 +88,41 @@ function save(){
     tasks: state.tasks,
     settings: state.settings,
     customTemplates: state.customTemplates,
-    recentTitles: state.recentTitles
+    recentTitles: state.recentTitles,
+    migrationNoDemoSeed: true
   }));
 }
 function seed(){
-  if(state.tasks.length) return;
-  state.tasks=[
-    {id:uid(), title:'弁当', note:'次にやること', date:state.selected, time:'12:30', done:false, later:false},
-    {id:uid(), title:'依頼者へメール返信', note:'15分', later:true, done:false},
-    {id:uid(), title:'17日資料作成', note:'', later:true, done:false}
-  ];
-  if(!state.customTemplates.length){
-    state.customTemplates = [
-      { id:uid(), title:'日報を書く', category:'work' },
-      { id:uid(), title:'洗い物', category:'home' }
-    ];
-  }
-  state.recentTitles = uniqueTitles(state.tasks.map(t=>t.title)).slice(0, 12);
+  if(state.tasks.length || state.customTemplates.length || state.recentTitles.length) return;
   save();
+}
+
+function migrateDemoData(raw){
+  if(raw?.migrationNoDemoSeed === true) return;
+  const before = JSON.stringify({ tasks:state.tasks, customTemplates:state.customTemplates, recentTitles:state.recentTitles });
+  state.tasks = state.tasks.filter(task=>!isDemoSeedTask(task));
+  state.customTemplates = state.customTemplates.filter(template=>!DEMO_TITLES.has(normalizeTitle(template.title)));
+  state.recentTitles = state.recentTitles.filter(title=>!DEMO_TITLES.has(normalizeTitle(title)));
+  const after = JSON.stringify({ tasks:state.tasks, customTemplates:state.customTemplates, recentTitles:state.recentTitles });
+  if(before !== after){
+    save();
+  } else {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      tasks: state.tasks,
+      settings: state.settings,
+      customTemplates: state.customTemplates,
+      recentTitles: state.recentTitles,
+      migrationNoDemoSeed: true
+    }));
+  }
+}
+function isDemoSeedTask(task){
+  const title = normalizeTitle(task?.title);
+  if(!DEMO_TITLES.has(title)) return false;
+  if(title === '弁当') return normalizeTitle(task?.note) === '次にやること';
+  if(title === '依頼者へメール返信') return normalizeTitle(task?.note) === '15分';
+  if(title === '17日資料作成') return !normalizeTitle(task?.note);
+  return true;
 }
 
 function recordRecentTitle(title){
@@ -130,8 +176,16 @@ function renderHeader(){
   const doneCount = state.tasks.filter(t=>t.done).length;
   $('#openCount').textContent=`未完了 ${openCount}件`;
   $('#doneCount').textContent=`完了 ${doneCount}件`;
+  const appVersion = $('#appVersion'); if(appVersion) appVersion.textContent = APP_VERSION;
   $('#wakeCardTime').textContent=state.settings.wake;
   $('#sleepCardTime').textContent=state.settings.sleep;
+  syncSettingInputs();
+}
+function syncSettingInputs(){
+  const wake = $('#wakeTime');
+  const sleep = $('#sleepTime');
+  if(wake) wake.value = state.settings.wake;
+  if(sleep) sleep.value = state.settings.sleep;
 }
 function renderWeek(){
   const strip=$('#weekStrip'); strip.innerHTML='';
@@ -179,9 +233,16 @@ function openEditorWithTemplate(item){
 }
 function renderRail(){
   const rail=$('#timeRail'); rail.innerHTML='';
-  const times=['7:00','8:00','11:00','14:00','17:00','20:00','22:00','23:00'];
+  const wake = normalizeTimeValue(state.settings.wake, '07:00');
+  const sleep = normalizeTimeValue(state.settings.sleep, '23:00');
+  const times = buildRailTimes(wake, sleep).map(railCaption);
+  const slotHeight = Math.max(34, Math.min(58, Math.floor(520 / Math.max(1, times.length - 1))));
   times.forEach(t=>{
-    const row=document.createElement('div'); row.className='rail-time'; row.textContent=t; row.innerHTML += '<span class="rail-dot"></span>';
+    const row=document.createElement('div');
+    row.className='rail-time';
+    row.style.height = `${slotHeight}px`;
+    row.textContent=t;
+    row.innerHTML += '<span class="rail-dot"></span>';
     rail.appendChild(row);
   });
   const now=new Date(); $('#currentTimeBadge').textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
@@ -293,8 +354,6 @@ function renderCalendar(){
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function wire(){
-  $('#prevDay').onclick=()=>{state.selected=plusDays(state.selected,-1); state.monthCursor=startOfMonth(parseISO(state.selected)); render();};
-  $('#nextDay').onclick=()=>{state.selected=plusDays(state.selected,1); state.monthCursor=startOfMonth(parseISO(state.selected)); render();};
   $('#todayBtn').onclick=()=>{state.selected=todayISO(); state.monthCursor=startOfMonth(new Date()); render();};
   $('#todayChip').onclick=()=>{state.selected=todayISO(); state.monthCursor=startOfMonth(new Date()); render();};
   $('#openMonth').onclick=()=>{ renderCalendar(); $('#monthSheet').classList.remove('hidden'); };
@@ -316,13 +375,29 @@ function wire(){
   $('#removeImage').onclick=()=>{ state.pendingImage=''; $('#taskImage').value=''; syncImagePreview(); };
   $('#saveTask').onclick=saveTask;
   $('#saveTemplate').onclick=saveCurrentAsTemplate;
-  $('#quickAdd').onclick=()=>openEditor();
   $('#floatingAdd').onclick=()=>openEditor();
+  const railQuickAdd = $('#railQuickAdd'); if(railQuickAdd) railQuickAdd.onclick=()=>openEditor();
   $('#addLater').onclick=()=>{ openEditor(); $('#taskLater').checked=true; $('#editorState').textContent='あとで'; };
   document.querySelectorAll('.soft-pill').forEach(b=>b.onclick=()=>$('#taskTime').value=b.dataset.time);
   $('#taskLater').onchange=(e)=>$('#editorState').textContent=e.target.checked?'あとで':'予定';
-  $('#wakeTime').onchange=e=>{ state.settings.wake=e.target.value; save(); render(); };
-  $('#sleepTime').onchange=e=>{ state.settings.sleep=e.target.value; save(); render(); };
+  const applyWakeTime=(value)=>{
+    if(!value) return;
+    state.settings.wake=value;
+    $('#wakeCardTime').textContent=value;
+    renderRail();
+    save();
+  };
+  const applySleepTime=(value)=>{
+    if(!value) return;
+    state.settings.sleep=value;
+    $('#sleepCardTime').textContent=value;
+    renderRail();
+    save();
+  };
+  $('#wakeTime').oninput=e=>applyWakeTime(e.target.value);
+  $('#wakeTime').onchange=e=>applyWakeTime(e.target.value);
+  $('#sleepTime').oninput=e=>applySleepTime(e.target.value);
+  $('#sleepTime').onchange=e=>applySleepTime(e.target.value);
 }
 function render(){
   state.monthCursor=startOfMonth(parseISO(state.selected));

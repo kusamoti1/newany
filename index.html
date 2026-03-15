@@ -7,7 +7,7 @@
   <title>Any Planner</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=1.8.2">
 </head>
 <body>
   <div class="app-shell">
@@ -25,10 +25,9 @@
       <div class="hero-right">
         <div class="hero-month-title" id="heroMonthTitle">2026年3月</div>
         <div class="hero-counts"><span id="openCount">未完了 0件</span><span id="doneCount">完了 0件</span></div>
+        <div class="hero-version" id="appVersion">v1.8.2</div>
         <div class="hero-actions">
-          <button class="circle-btn" id="prevDay" aria-label="前日">‹</button>
           <button class="pill dark" id="todayBtn">今日</button>
-          <button class="circle-btn" id="nextDay" aria-label="翌日">›</button>
           <button class="icon-btn" id="openMonth" aria-label="月表示">📅</button>
           <button class="icon-btn" id="openSettings" aria-label="設定">⚙︎</button>
         </div>
@@ -56,7 +55,6 @@
       <section class="timeline-main">
         <div class="wake-row">
           <div class="icon-disc">☀︎</div>
-          <button class="mini-plus" id="quickAdd">＋</button>
           <article class="fixed-card">
             <div class="fixed-time" id="wakeCardTime">7:00</div>
             <div class="fixed-title">起床</div>
@@ -65,6 +63,7 @@
         </div>
 
         <div id="currentTimeBadge" class="now-badge">7:28</div>
+        <button id="railQuickAdd" class="rail-plus" aria-label="この位置に追加">＋</button>
         <div id="timelineList" class="timeline-list"></div>
 
         <div class="sleep-row">
@@ -182,6 +181,6 @@
     </div>
   </section>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=1.8.2"></script>
 </body>
 </html>
