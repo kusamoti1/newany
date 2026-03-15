@@ -97,7 +97,7 @@ button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   .hero-date-copy{padding-bottom:6px}
   .hero-month-inline{font-size:24px;line-height:1}
   .hero-year{font-size:18px;line-height:1.05}
-  .hero-actions{display:grid;grid-template-columns:56px 1fr 56px 56px 56px;gap:10px;padding-top:0;justify-content:stretch}
+  .hero-actions{display:grid;grid-template-columns:minmax(120px,1fr) 56px 56px;gap:10px;padding-top:0;justify-content:stretch}
   .circle-btn,.icon-btn{width:56px;height:56px;font-size:30px}
   .pill{height:56px;padding:0 18px;font-size:16px}
   .week-strip{gap:8px;margin:12px 0 16px}
@@ -177,7 +177,7 @@ button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   .hero-month-title{font-size:24px}
   .hero-counts{font-size:13px;gap:8px;flex-wrap:wrap}
   .today-chip{height:44px;min-width:74px;padding:0 18px;font-size:15px}
-  .hero-actions{display:grid;grid-template-columns:44px minmax(96px,1fr) 44px 44px 44px;gap:8px;padding-top:2px;width:100%}
+  .hero-actions{display:grid;grid-template-columns:minmax(92px,1fr) 44px 44px;gap:8px;padding-top:2px;width:100%}
   .circle-btn,.icon-btn{width:44px;height:44px;font-size:24px}
   .pill{height:44px;padding:0 16px;font-size:15px}
   .week-strip{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}

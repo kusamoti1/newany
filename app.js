@@ -141,6 +141,13 @@ function renderHeader(){
   $('#doneCount').textContent=`完了 ${doneCount}件`;
   $('#wakeCardTime').textContent=state.settings.wake;
   $('#sleepCardTime').textContent=state.settings.sleep;
+  syncSettingInputs();
+}
+function syncSettingInputs(){
+  const wake = $('#wakeTime');
+  const sleep = $('#sleepTime');
+  if(wake) wake.value = state.settings.wake;
+  if(sleep) sleep.value = state.settings.sleep;
 }
 function renderWeek(){
   const strip=$('#weekStrip'); strip.innerHTML='';
@@ -302,8 +309,6 @@ function renderCalendar(){
 }
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 function wire(){
-  $('#prevDay').onclick=()=>{state.selected=plusDays(state.selected,-1); state.monthCursor=startOfMonth(parseISO(state.selected)); render();};
-  $('#nextDay').onclick=()=>{state.selected=plusDays(state.selected,1); state.monthCursor=startOfMonth(parseISO(state.selected)); render();};
   $('#todayBtn').onclick=()=>{state.selected=todayISO(); state.monthCursor=startOfMonth(new Date()); render();};
   $('#todayChip').onclick=()=>{state.selected=todayISO(); state.monthCursor=startOfMonth(new Date()); render();};
   $('#openMonth').onclick=()=>{ renderCalendar(); $('#monthSheet').classList.remove('hidden'); };
@@ -330,8 +335,12 @@ function wire(){
   $('#addLater').onclick=()=>{ openEditor(); $('#taskLater').checked=true; $('#editorState').textContent='あとで'; };
   document.querySelectorAll('.soft-pill').forEach(b=>b.onclick=()=>$('#taskTime').value=b.dataset.time);
   $('#taskLater').onchange=(e)=>$('#editorState').textContent=e.target.checked?'あとで':'予定';
-  $('#wakeTime').onchange=e=>{ state.settings.wake=e.target.value; save(); render(); };
-  $('#sleepTime').onchange=e=>{ state.settings.sleep=e.target.value; save(); render(); };
+  const applyWakeTime=(value)=>{ if(!value) return; state.settings.wake=value; save(); render(); };
+  const applySleepTime=(value)=>{ if(!value) return; state.settings.sleep=value; save(); render(); };
+  $('#wakeTime').oninput=e=>applyWakeTime(e.target.value);
+  $('#wakeTime').onchange=e=>applyWakeTime(e.target.value);
+  $('#sleepTime').oninput=e=>applySleepTime(e.target.value);
+  $('#sleepTime').onchange=e=>applySleepTime(e.target.value);
 }
 function render(){
   state.monthCursor=startOfMonth(parseISO(state.selected));
