@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'any-planner-web-faithful-v1.7';
-const APP_VERSION = 'v1.8.1';
+const APP_VERSION = 'v1.8.2';
 const $ = (s)=>document.querySelector(s);
 const BUILTIN_TEMPLATES = [];
 const DEMO_TITLES = new Set(['弁当','依頼者へメール返信','17日資料作成','資料作成','明日の準備']);
@@ -46,6 +46,30 @@ function normalizeTimeValue(v, fallback){
 function railCaption(v){
   const t = normalizeTimeValue(v, '00:00').split(':');
   return `${Number(t[0])}:${t[1]}`;
+}
+function toMinutes(v){
+  const t = normalizeTimeValue(v, '00:00').split(':').map(Number);
+  return t[0]*60 + t[1];
+}
+function fromMinutes(total){
+  const clamped = Math.min(23*60+59, Math.max(0, total));
+  const h = Math.floor(clamped/60);
+  const m = clamped%60;
+  return `${h}:${String(m).padStart(2,'0')}`;
+}
+function buildRailTimes(wake, sleep){
+  const start = toMinutes(wake);
+  let end = toMinutes(sleep);
+  if(end <= start) end = Math.min(start + 16*60, 23*60+59);
+  const result = [fromMinutes(start)];
+  let tick = Math.ceil((start + 1) / 60) * 60;
+  while(tick < end){
+    result.push(fromMinutes(tick));
+    tick += 60;
+  }
+  const endLabel = fromMinutes(end);
+  if(result[result.length-1] !== endLabel) result.push(endLabel);
+  return result;
 }
 
 function load(){
@@ -211,12 +235,14 @@ function renderRail(){
   const rail=$('#timeRail'); rail.innerHTML='';
   const wake = normalizeTimeValue(state.settings.wake, '07:00');
   const sleep = normalizeTimeValue(state.settings.sleep, '23:00');
-  const times=[wake,'8:00','11:00','14:00','17:00','20:00','22:00',sleep].map(t=>railCaption(t));
-  const seen = new Set();
+  const times = buildRailTimes(wake, sleep).map(railCaption);
+  const slotHeight = Math.max(34, Math.min(58, Math.floor(520 / Math.max(1, times.length - 1))));
   times.forEach(t=>{
-    if(seen.has(t)) return;
-    seen.add(t);
-    const row=document.createElement('div'); row.className='rail-time'; row.textContent=t; row.innerHTML += '<span class="rail-dot"></span>';
+    const row=document.createElement('div');
+    row.className='rail-time';
+    row.style.height = `${slotHeight}px`;
+    row.textContent=t;
+    row.innerHTML += '<span class="rail-dot"></span>';
     rail.appendChild(row);
   });
   const now=new Date(); $('#currentTimeBadge').textContent=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
