@@ -326,6 +326,7 @@ function wire(){
   $('#saveTask').onclick=saveTask;
   $('#saveTemplate').onclick=saveCurrentAsTemplate;
   $('#floatingAdd').onclick=()=>openEditor();
+  const railQuickAdd = $('#railQuickAdd'); if(railQuickAdd) railQuickAdd.onclick=()=>openEditor();
   $('#addLater').onclick=()=>{ openEditor(); $('#taskLater').checked=true; $('#editorState').textContent='あとで'; };
   document.querySelectorAll('.soft-pill').forEach(b=>b.onclick=()=>$('#taskTime').value=b.dataset.time);
   $('#taskLater').onchange=(e)=>$('#editorState').textContent=e.target.checked?'あとで':'予定';
