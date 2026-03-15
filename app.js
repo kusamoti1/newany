@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'any-planner-web-faithful-v1.7';
+const APP_VERSION = 'v1.8.1';
 const $ = (s)=>document.querySelector(s);
 const BUILTIN_TEMPLATES = [];
 const DEMO_TITLES = new Set(['弁当','依頼者へメール返信','17日資料作成','資料作成','明日の準備']);
@@ -34,6 +35,18 @@ function jpMonthYear(d){ return `${d.getFullYear()}年${d.getMonth()+1}月`; }
 function normalizeTitle(v){ return String(v||'').trim().replace(/\s+/g,' '); }
 function uniqueTitles(list){ return [...new Set(list.map(normalizeTitle).filter(Boolean))]; }
 function shortCaption(v){ const d=parseISO(v); return `${d.getMonth()+1}月${d.getDate()}日(${['日','月','火','水','木','金','土'][d.getDay()]})`; }
+function normalizeTimeValue(v, fallback){
+  const base = String(v || fallback || '00:00');
+  const m = base.match(/^(\d{1,2}):(\d{2})$/);
+  if(!m) return fallback || '00:00';
+  const hh = Math.min(23, Math.max(0, Number(m[1])));
+  const mm = Math.min(59, Math.max(0, Number(m[2])));
+  return `${hh}:${String(mm).padStart(2,'0')}`;
+}
+function railCaption(v){
+  const t = normalizeTimeValue(v, '00:00').split(':');
+  return `${Number(t[0])}:${t[1]}`;
+}
 
 function load(){
   try{
@@ -139,6 +152,7 @@ function renderHeader(){
   const doneCount = state.tasks.filter(t=>t.done).length;
   $('#openCount').textContent=`未完了 ${openCount}件`;
   $('#doneCount').textContent=`完了 ${doneCount}件`;
+  const appVersion = $('#appVersion'); if(appVersion) appVersion.textContent = APP_VERSION;
   $('#wakeCardTime').textContent=state.settings.wake;
   $('#sleepCardTime').textContent=state.settings.sleep;
   syncSettingInputs();
@@ -195,8 +209,13 @@ function openEditorWithTemplate(item){
 }
 function renderRail(){
   const rail=$('#timeRail'); rail.innerHTML='';
-  const times=['7:00','8:00','11:00','14:00','17:00','20:00','22:00','23:00'];
+  const wake = normalizeTimeValue(state.settings.wake, '07:00');
+  const sleep = normalizeTimeValue(state.settings.sleep, '23:00');
+  const times=[wake,'8:00','11:00','14:00','17:00','20:00','22:00',sleep].map(t=>railCaption(t));
+  const seen = new Set();
   times.forEach(t=>{
+    if(seen.has(t)) return;
+    seen.add(t);
     const row=document.createElement('div'); row.className='rail-time'; row.textContent=t; row.innerHTML += '<span class="rail-dot"></span>';
     rail.appendChild(row);
   });
@@ -339,12 +358,14 @@ function wire(){
     if(!value) return;
     state.settings.wake=value;
     $('#wakeCardTime').textContent=value;
+    renderRail();
     save();
   };
   const applySleepTime=(value)=>{
     if(!value) return;
     state.settings.sleep=value;
     $('#sleepCardTime').textContent=value;
+    renderRail();
     save();
   };
   $('#wakeTime').oninput=e=>applyWakeTime(e.target.value);
