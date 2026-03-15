@@ -77,78 +77,7 @@ button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .editor-state{font-size:14px;color:#b5b7be;font-weight:700}.editor-title{font-size:26px;font-weight:850}.save-btn{height:44px;padding:0 18px;border-radius:999px;font-weight:800}
 .editor-body{display:grid;gap:14px;padding:18px}.text-input,.text-area{width:100%;border:1px solid var(--line);background:#faf9f6;border-radius:18px;padding:15px 16px}.text-area{min-height:100px;resize:vertical}.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.editor-grid label,.setting-row{display:grid;gap:8px;color:#646871;font-weight:700}.quick-time-row{display:flex;gap:8px;flex-wrap:wrap}.soft-pill{height:42px;padding:0 16px;border-radius:999px;background:#eff0ef;color:#2b72e5;font-weight:800}.toggle-row{display:flex;justify-content:space-between;align-items:center;font-weight:800}
 .calendar-modal,.settings-modal{padding:18px}.calendar-head{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}.calendar-title{font-size:26px;font-weight:850}.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}.calendar-cell{min-height:74px;border-radius:18px;border:1px solid var(--line);background:#faf9f6;padding:10px;display:grid;align-content:space-between}.calendar-cell.active{background:#111318;color:#fff;border-color:#111318}.calendar-cell .dot{width:8px;height:8px;border-radius:50%;background:#2f73e7}.calendar-cell.active .dot{background:#fff}
-@media (max-width: 900px){
-  .app-shell{padding:16px 16px 24px}
-  .hero{display:block}
-  .hero-actions{margin-top:12px;justify-content:flex-start}
-  .hero-day{font-size:82px}
-  .timeline-wrap{grid-template-columns:74px 1fr}
-  .timeline-list{margin-left:0}
-  .task-row{grid-template-columns:70px 1fr}
-  .sheet-head h2{font-size:46px}
-}
 
-
-@media (max-width: 480px){
-  .app-shell{padding:12px 12px 22px; max-width:100%;}
-  .hero{display:grid;grid-template-columns:1fr;gap:10px;padding-top:2px}
-  .hero-date-row{gap:8px;align-items:flex-end}
-  .hero-day{font-size:76px;line-height:.86;letter-spacing:-0.08em}
-  .hero-date-copy{padding-bottom:6px}
-  .hero-month-inline{font-size:24px;line-height:1}
-  .hero-year{font-size:18px;line-height:1.05}
-  .hero-actions{display:grid;grid-template-columns:minmax(120px,1fr) 56px 56px;gap:10px;padding-top:0;justify-content:stretch}
-  .circle-btn,.icon-btn{width:56px;height:56px;font-size:30px}
-  .pill{height:56px;padding:0 18px;font-size:16px}
-  .week-strip{gap:8px;margin:12px 0 16px}
-  .week-item{gap:8px}
-  .week-label{font-size:14px}
-  .week-bubble{width:46px;height:46px}
-  .week-num{font-size:18px}
-  .timeline-wrap{grid-template-columns:56px 1fr;gap:10px;padding-top:4px}
-  .time-rail{padding-top:78px}
-  .time-rail::before{left:44px;width:3px}
-  .rail-time{height:50px;font-size:16px;padding-right:8px}
-  .rail-dot{width:10px;height:10px;right:-4px}
-  .timeline-main{padding-bottom:120px}
-  .wake-row,.sleep-row{grid-template-columns:44px 1fr;gap:10px;margin-bottom:10px}
-  .sleep-row{margin-top:18px}
-  .icon-disc{width:44px;height:44px;font-size:18px}
-  .fixed-card,.task-card{min-height:auto;padding:14px 16px;border-radius:24px;grid-template-columns:1fr 34px}
-  .fixed-card::before,.task-card::before{top:14px;bottom:14px;width:5px}
-  .fixed-time{font-size:14px}
-  .fixed-title{font-size:20px;line-height:1.05}
-  .check-btn{width:32px;height:32px;border-width:3px;margin-top:4px}
-  .now-badge{left:-28px;top:62px;padding:6px 10px;border-radius:10px;font-size:14px}
-  .timeline-list{gap:10px}
-  .task-row{grid-template-columns:52px 1fr;gap:10px}
-  .task-time{font-size:14px;padding-top:10px}
-  .task-title{font-size:22px;line-height:1.05;letter-spacing:-.04em}
-  .task-meta{margin-top:6px;font-size:14px;line-height:1.25}
-  .task-actions{gap:8px;margin-top:10px}
-  .mini-btn{height:38px;padding:0 14px;font-size:14px}
-  .floating-add{right:18px;bottom:110px;width:74px;height:74px;font-size:48px}
-  .later-sheet{margin-top:14px;padding:10px 14px 22px;border-radius:28px 28px 0 0}
-  .sheet-handle{width:68px;height:7px;margin-bottom:14px}
-  .sheet-head{align-items:center}
-  .sheet-label{font-size:13px;letter-spacing:.12em}
-  .sheet-head h2{font-size:28px;line-height:1}
-  .sheet-add{width:68px;height:68px;font-size:42px}
-  .later-list{gap:10px;margin-top:12px}
-  .later-card{padding:14px 14px;border-radius:20px}
-  .later-title{font-size:20px}
-  .editor-modal,.calendar-modal,.settings-modal{border-radius:28px}
-  .editor-header{padding:14px;grid-template-columns:40px 1fr auto}
-  .editor-header .ghost-btn{width:40px;height:40px;font-size:22px}
-  .editor-title{font-size:22px}
-  .save-btn{height:40px;padding:0 14px}
-  .editor-body{padding:14px;gap:12px}
-  .editor-grid{grid-template-columns:1fr}
-  .calendar-head{gap:8px;flex-wrap:wrap}
-  .calendar-title{font-size:22px}
-  .calendar-grid{gap:6px}
-  .calendar-cell{min-height:58px;border-radius:14px;padding:8px}
-}
 
 .upload-row{display:grid;gap:8px;color:#646871;font-weight:700}.file-input{padding:12px 14px}.image-preview-wrap{display:grid;gap:10px}.image-preview-wrap.hidden{display:none}.image-preview{width:100%;max-height:200px;object-fit:cover;border-radius:18px;border:1px solid var(--line);background:#f6f5f2}.remove-image-btn{justify-self:start}.task-image,.later-image{display:block;width:100%;max-height:160px;object-fit:cover;border-radius:18px;margin-top:12px;border:1px solid var(--line);background:#f7f6f3}.later-image{max-width:220px}.task-main{min-width:0}
 @media (max-width: 480px){.task-image,.later-image{max-height:120px;border-radius:14px}.image-preview{max-height:150px}}

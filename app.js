@@ -335,8 +335,18 @@ function wire(){
   $('#addLater').onclick=()=>{ openEditor(); $('#taskLater').checked=true; $('#editorState').textContent='あとで'; };
   document.querySelectorAll('.soft-pill').forEach(b=>b.onclick=()=>$('#taskTime').value=b.dataset.time);
   $('#taskLater').onchange=(e)=>$('#editorState').textContent=e.target.checked?'あとで':'予定';
-  const applyWakeTime=(value)=>{ if(!value) return; state.settings.wake=value; save(); render(); };
-  const applySleepTime=(value)=>{ if(!value) return; state.settings.sleep=value; save(); render(); };
+  const applyWakeTime=(value)=>{
+    if(!value) return;
+    state.settings.wake=value;
+    $('#wakeCardTime').textContent=value;
+    save();
+  };
+  const applySleepTime=(value)=>{
+    if(!value) return;
+    state.settings.sleep=value;
+    $('#sleepCardTime').textContent=value;
+    save();
+  };
   $('#wakeTime').oninput=e=>applyWakeTime(e.target.value);
   $('#wakeTime').onchange=e=>applyWakeTime(e.target.value);
   $('#sleepTime').oninput=e=>applySleepTime(e.target.value);
